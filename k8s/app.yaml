@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cadenafrio-config
+data:
+  SPRING_PROFILES_ACTIVE: docker
+  DB_URL: jdbc:postgresql://postgres:5432/cadenafriodb
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cadenafrio-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cadenafrio-app
+  template:
+    metadata:
+      labels:
+        app: cadenafrio-app
+    spec:
+      containers:
+        - name: app
+          image: cadenafrio-app:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              valueFrom:
+                configMapKeyRef:
+                  name: cadenafrio-config
+                  key: SPRING_PROFILES_ACTIVE
+            - name: DB_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: cadenafrio-config
+                  key: DB_URL
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: cadenafrio-db-secret
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cadenafrio-db-secret
+                  key: password
+            - name: CAPTCHA_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: cadenafrio-app-secret
+                  key: CAPTCHA_SECRET
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cadenafrio-app
+spec:
+  type: NodePort
+  selector:
+    app: cadenafrio-app
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30080
