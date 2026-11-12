@@ -87,5 +87,4 @@ La creación de envíos requiere el encabezado `X-Captcha-Token`.
 ## Seguridad
 
 Los secretos reales deben permanecer en `.env` o en Kubernetes Secrets.
-No se deben subir al repositorio. `.env.example` solo contiene la estructura
-de configuración sin valores secretos.
+`.env.example` solo contiene la estructura de configuración.
