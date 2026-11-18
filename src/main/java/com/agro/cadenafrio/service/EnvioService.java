@@ -56,7 +56,6 @@ public class EnvioService {
     public EventoResponse registrarEvento(Long envioId, EventoRequest req) {
         Envio envio = buscarEnvio(envioId);
 
-        // REGLA CLAVE DE LA CADENA DE FRÍO:
         // si la temperatura sale del rango permitido, es una alerta
         boolean fueraDeRango = req.temperatura() < envio.getTemperaturaMinima()
                             || req.temperatura() > envio.getTemperaturaMaxima();

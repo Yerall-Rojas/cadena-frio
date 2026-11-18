@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cadena de frio - Prueba de Captcha</title>
+    <style>
+        body { max-width: 700px; margin: 40px auto; font-family: Arial, sans-serif; }
+        label { display: block; margin-top: 14px; font-weight: bold; }
+        input { width: 100%; box-sizing: border-box; padding: 10px; margin-top: 6px; }
+        button { margin-top: 18px; padding: 10px 16px; }
+        pre { background: #f3f3f3; padding: 12px; min-height: 60px; white-space: pre-wrap; }
+    </style>
+    <script>
+        let widgetId;
+
+        function siteKeyFromUrl() {
+            return new URLSearchParams(window.location.search).get("sitekey") || "";
+        }
+
+        function renderCaptcha() {
+            const siteKey = document.getElementById("siteKey").value.trim();
+            if (!siteKey) {
+                document.getElementById("resultado").textContent =
+                    "Ingresa la clave publica de reCAPTCHA.";
+                return;
+            }
+
+            grecaptcha.ready(function () {
+                if (widgetId !== undefined) {
+                    grecaptcha.reset(widgetId);
+                } else {
+                    widgetId = grecaptcha.render("captcha", {
+                        "sitekey": siteKey
+                    });
+                }
+            });
+        }
+
+        window.addEventListener("DOMContentLoaded", function () {
+            document.getElementById("siteKey").value = siteKeyFromUrl();
+            renderCaptcha();
+        });
+
+        async function crearEnvio() {
+            const token = grecaptcha.getResponse(widgetId);
+            if (!token) {
+                document.getElementById("resultado").textContent =
+                    "Resuelve primero el Captcha.";
+                return;
+            }
+
+            const body = {
+                codigo: document.getElementById("codigo").value,
+                producto: document.getElementById("producto").value,
+                temperaturaMinima: Number(document.getElementById("minima").value),
+                temperaturaMaxima: Number(document.getElementById("maxima").value)
+            };
+
+            try {
+                const response = await fetch("http://127.0.0.1:18080/api/envios", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Captcha-Token": token
+                    },
+                    body: JSON.stringify(body)
+                });
+                const text = await response.text();
+                document.getElementById("resultado").textContent =
+                    "HTTP " + response.status + "\n" + text;
+            } catch (error) {
+                document.getElementById("resultado").textContent =
+                    "Error de conexion: " + error.message;
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Prueba de reCAPTCHA</h1>
+
+    <label for="siteKey">Clave publica de reCAPTCHA</label>
+    <input id="siteKey" type="text" placeholder="Pega aqui la Site Key">
+    <button type="button" onclick="renderCaptcha()">Cargar Captcha</button>
+
+    <label for="codigo">Codigo del envio</label>
+    <input id="codigo" value="ENV-HTML-001">
+
+    <label for="producto">Producto</label>
+    <input id="producto" value="Leche">
+
+    <label for="minima">Temperatura minima</label>
+    <input id="minima" type="number" value="2">
+
+    <label for="maxima">Temperatura maxima</label>
+    <input id="maxima" type="number" value="6">
+
+    <div id="captcha" style="margin-top: 18px;"></div>
+    <button type="button" onclick="crearEnvio()">Crear envio</button>
+
+    <h2>Resultado</h2>
+    <pre id="resultado"></pre>
+
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+</body>
+</html>

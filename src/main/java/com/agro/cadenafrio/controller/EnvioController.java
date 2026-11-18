@@ -13,6 +13,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/envios")
+@CrossOrigin(origins = {
+        "http://localhost:8081",
+        "http://127.0.0.1:8081"
+})
 public class EnvioController {
 
     private final EnvioService envioService;

@@ -30,7 +30,6 @@ public class CaptchaValidatorService {
     }
 
     public boolean validar(String token) {
-        // Sin token no hay nada que verificar
         if (token == null || token.isBlank()) {
             return false;
         }
@@ -49,7 +48,6 @@ public class CaptchaValidatorService {
 
             return respuesta != null && Boolean.TRUE.equals(respuesta.get("success"));
         } catch (RestClientException e) {
-            // Si no se puede contactar a Google, se rechaza por seguridad
             log.error("No se pudo verificar el Captcha: {}", e.getMessage());
             return false;
         }
