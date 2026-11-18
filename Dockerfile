@@ -1,11 +1,10 @@
-FROM amazoncorretto:17 AS build
+FROM maven:3.9.11-eclipse-temurin-17 AS build
 
 WORKDIR /workspace
-COPY . .
+COPY pom.xml .
+COPY src ./src
 
-RUN yum install -y tar gzip && \
-    chmod +x mvnw && \
-    ./mvnw -DskipTests package
+RUN mvn -B -DskipTests package
 
 FROM amazoncorretto:17
 
